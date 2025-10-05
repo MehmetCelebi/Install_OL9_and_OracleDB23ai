@@ -1,0 +1,102 @@
+**********************************************
+*** B) INSTALL&CONFIG ORACLE DATABASE 23ai ***
+**********************************************
+
+********************************
+*** 1) Host File (root user) ***
+********************************
+	vi /etc/hosts
+
+	127.0.0.1       localhost localhost.localdomain localhost4 localhost4.localdomain4
+	192.168.1.67  db23ai.localdomain  db23ai
+
+****************************************************
+*** 2) Install - Pre-Install Package (root user) ***
+****************************************************
+	open CMD
+	ssh root@192.168.1.67   (or connect to OS locally)
+	dnf install -y oracle-database-preinstall-23ai
+
+*************************************************************************************
+*** 3) Download Oracle Database 23ai RPM Package under /tmp directory (root user) ***
+*************************************************************************************
+	mkdir /tmp/setup_files
+	cd /tmp/setup_files
+
+	wget https://download.oracle.com/otn-pub/otn_software/db-free/oracle-database-free-23ai-23.9-1.el9.x86_64.rpm
+		https://download.oracle.com/otn-pub/otn_software/db-free/oracle-database-free-23ai-23.9-1.el9.x86_64.rpm
+	or
+	open a borowser -- go https://www.oracle.com/database/free/get-started/
+		and download oracle-database-free-23ai-23.9-1.el9.x86_64.rpm (under Oracle Linux 9 (OL9) )
+
+****************************************************
+*** 4) 	Install Oracle Database 23ai (root user) ***
+****************************************************
+	dnf -y localinstall /tmp/setup_files/oracle-database-free-23ai-1.0-1.el9.x86_64.rpm
+	(NOTE: After installation now the ORACLE_HOME for the software istallation is /opt/oracle/product/23ai/dbhomeFree)
+
+**************************************************************************************
+*** 5)	After installation, create and configure the database instance (root user) ***
+**************************************************************************************
+	
+	/etc/init.d/oracle-free-23ai configure
+		when prompted set passwords for SYS and SYSTEM users
+
+*************************************************
+*** 6) Setup Oracle Environment (oracle user) ***
+*************************************************
+	su - oracle
+	Open .bash_profile file to define oracle environment variables
+
+	vi .bash_profile
+
+	Add the following lines
+	
+	#Oracle environment variables
+	export ORACLE_SID=FREE
+	export ORACLE_BASE=/opt/oracle
+	export ORACLE_HOME=/opt/oracle/product/23ai/dbhomeFree
+	export PATH=$PATH:$HOME/.local/bin:$ORACLE_HOME/bin
+
+*****************************************
+*** 7) Run bash profile (oracle user) ***
+*****************************************
+	. .bash_profile
+
+********************************************************
+*** 8) Connect to Oracle Database 23ai (oracle user) ***
+	sqlplus / as sysdba
+	show pdbs
+	show con_name
+	ALTER SESSION SET CONTAINER=FREEDB1;
+
+********************************************************************
+*** THE INSTALLATION DATABASE IS NOW COMPLETED and READY FOR USE ***
+********************************************************************
+
+*******************************************
+*** A) How to connect database directly ***
+*******************************************
+	a) connect to linux with oracle user and run them
+		export ORACLE_HOME=/opt/oracle/product/23ai/dbhomeFree
+		export PATH=$ORACLE_HOME/bin:$PATH
+
+	b) For Root Container
+		sqlplus sys/<Password>@//localhost:1521/free as sysdba
+	c) For Pluggable database
+		sqlplus sys/<Password>@//localhost:1521/freepdb1 as sysdba
+
+*******************************************
+*** B) Start-Stop Database (root user) ***
+*******************************************
+	
+	/etc/init.d/oracle-free-23ai stop
+	/etc/init.d/oracle-free-23ai start
+
+********************************************
+*** C) Start-Stop Database (oracle user) ***
+********************************************
+	
+	a) sqlplus sys/<Password>@//localhost:1521/free as sysdba
+		shutdown
+		startup
