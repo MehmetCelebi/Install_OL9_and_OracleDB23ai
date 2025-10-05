@@ -1,0 +1,43 @@
+**************************************************************************
+*** A) ORACLE LINUX 9 (OL9) INSTALLATION (VIRTUALBOX, VIRTUAL MACHINE) ***
+
+** get wget tool
+	https://eternallybored.org/misc/wget/
+
+	copy wget.exe file to C:\Windows\System32
+
+	IN CMD
+		wget -V
+		wget --help
+
+	cd E:\0_SETUP_FILES\Downloads
+	
+	wget https://yum.oracle.com/ISOS/OracleLinux/OL9/u6/x86_64/OracleLinux-R9-U6-x86_64-dvd.iso
+
+	OPEN VIRTUALBOX and FOLLOW ME
+
+	AFTER FINESHED INSTALLATION OF LINUX (root user)
+
+	1) Install and Upgrade GUI Desktop Packages 
+		
+		dnf groupinstall -y "Server with GUI" --skip-broken
+		systemctl set-default graphical.target
+		dnf update -y
+		reboot
+	2) NETWORK CONFIGURATION
+		IP:   		192.168.1.67
+		SubnetMask : 	255.255.255.0
+		Gateway : 	192.168.1.1
+		DNS    : 	8.8.8.8    8.8.4.4  or 192.168.1.1
+	3) CHANGE SELinux (used for Oracle Database Installation)
+		vi /etc/selinux/config
+		SELINUX=permissive
+	4) Stop and Disable Firewall (The OS is used for Oracle Database Installation)
+		systemctl stop firewalld
+		systemctl disable firewalld
+	5) Start and Enable SSH Service (If connect to OS from Remote)
+		systemctl start sshd.service
+		systemctl enable sshd.service
+************************************
+*** COMPLETED LINUX INSTALLATION ***
+************************************
