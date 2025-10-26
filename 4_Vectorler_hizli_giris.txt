@@ -1,0 +1,220 @@
+**************************************
+--1-*** CREATE USER AND GRANTED IT ***
+**************************************
+
+sqlplus sys/<Password>@//localhost:1539/freepdb1 as sysdba
+
+create user if not exists mehmet identified by celebi quota unlimited on users;
+grant create session, db_developer_role, create mining model to mehmet;
+
+***********************************************
+--2-*** CREATE A TABLE AND INSERT SOME DATA ***
+***********************************************
+
+sqlplus mehmet/<Password>@//localhost:1539/freepdb1
+
+CREATE TABLE MEYVELER (
+	ADI VARCHAR2(50),
+	VEKTOR1	VECTOR,
+	VEKTOR2 VECTOR
+);
+
+
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('ELMA', '[3,2]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('ARMUT', '[4,3]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('ŞEFTALİ', '[2,3]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('KAYISI', '[1,2]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('KİRAZ', '[6,5]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('VİŞNE', '[7,4]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('KAVUN', '[6,3]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('KARPUZ', '[5,4]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('PORTAKAL', '[3,5]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('MANDALINA', '[2,6]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('GREYFURT', '[7,5]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('LİMON', '[5,6]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('ÜZÜM', '[9,3]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('ÇİLEK', '[8,1]');
+INSERT INTO MEYVELER (ADI, VEKTOR1) VALUES ('MUZ', '[8,1]');
+
+************************************
+--3-*** VECTOR DISTANCE ***
+************************************
+-- EUCLIDEAN (İki vektör arasındaki Öklit uzaklığı)
+
+COL MEYVE_1 FOR A20
+COL MEYVE_2 FOR A20
+COL DISTANCE FOR 9,999.99999
+
+select
+m1.ADI as MEYVE_1,
+m2.ADI as MEYVE_2,
+VECTOR_DISTANCE(m1.VEKTOR1, m2.VEKTOR1, EUCLIDEAN) as distance
+from MEYVELER m1, MEYVELER m2
+where m1.ADI='ARMUT'
+order by distance asc
+FETCH FIRST 5 ROWS ONLY;
+
+select
+m1.ADI as MEYVE_1,
+m2.ADI as MEYVE_2,
+VECTOR_DISTANCE(m1.VEKTOR1, m2.VEKTOR1, EUCLIDEAN) as distance
+from MEYVELER m1, MEYVELER m2
+where m1.ADI='KARPUZ'
+order by distance asc
+FETCH FIRST 5 ROWS ONLY;
+
+-- COSINE (İki vektör arasındaki Açının Cosinüsü)
+select
+m1.ADI as MEYVE_1,
+m2.ADI as MEYVE_2,
+VECTOR_DISTANCE(m1.VEKTOR1, m2.VEKTOR1, COSINE) as distance
+from MEYVELER m1, MEYVELER m2
+where m1.ADI='ARMUT'
+order by distance asc
+FETCH FIRST 5 ROWS ONLY;
+
+select
+m1.ADI as MEYVE_1,
+m2.ADI as MEYVE_2,
+VECTOR_DISTANCE(m1.VEKTOR1,m2.VEKTOR1, COSINE) as distance
+from MEYVELER m1, MEYVELER m2
+where m1.ADI='KARPUZ'
+order by distance asc
+FETCH FIRST 5 ROWS ONLY;
+
+-- DOT (Bir vektörün diğer vektör üzerine izdüşüm büyüklüğü)
+select
+m1.ADI as MEYVE_1,
+m2.ADI as MEYVE_2,
+VECTOR_DISTANCE(m1.VEKTOR1, m2.VEKTOR1, DOT) as distance
+from MEYVELER m1, MEYVELER m2
+where m1.ADI='ARMUT'
+order by distance asc
+FETCH FIRST 5 ROWS ONLY;
+
+select
+m1.ADI as MEYVE_1,
+m2.ADI as MEYVE_2,
+VECTOR_DISTANCE(m1.VEKTOR1,m2.VEKTOR1, DOT) as distance
+from MEYVELER m1, MEYVELER m2
+where m1.ADI='KARPUZ'
+order by distance asc
+FETCH FIRST 5 ROWS ONLY;
+
+-- EUCLIDEAN, COSINE, DOT, EUCLIDEAN_SQUARED, HAMMING, MANHATTAN
+COL DISTANCE_OKLIT FOR 9,999.99999
+COL DISTANCE_COS FOR 9,999.99999
+COL DISTANCE_DOT FOR 9,999.99999
+COL DISTANCE_OKLIT_SQ FOR 9,999.99999
+COL DISTANCE_HAMM FOR 9,999.99999
+COL DISTANCE_MANH FOR 9,999.99999
+SET LINES 500
+
+select
+m1.ADI as MEYVE_1,
+m2.ADI as MEYVE_2,
+VECTOR_DISTANCE(m1.VEKTOR1,m2.VEKTOR1, EUCLIDEAN) as distance_OKLIT,
+VECTOR_DISTANCE(m1.VEKTOR1,m2.VEKTOR1, COSINE) as distance_COS,
+VECTOR_DISTANCE(m1.VEKTOR1,m2.VEKTOR1, DOT) as distance_DOT,
+VECTOR_DISTANCE(m1.VEKTOR1,m2.VEKTOR1, EUCLIDEAN_SQUARED) as distance_OKLIT_SQ,
+VECTOR_DISTANCE(m1.VEKTOR1,m2.VEKTOR1, HAMMING) as distance_HAMM,
+VECTOR_DISTANCE(m1.VEKTOR1,m2.VEKTOR1, MANHATTAN) as distance_MANH
+from MEYVELER m1, MEYVELER m2
+where m1.ADI='KARPUZ'
+order by 1, 2, 3 asc
+FETCH FIRST 5 ROWS ONLY;
+
+************************************************
+--4-*** CHOOSE A MODEL and Load it to Database ***
+************************************************
+---
+mkdir -p /tmp/models
+cd /tmp/models
+
+--DOWNLOAD ONNX Model (Or another LLM model)
+wget https://adwc4pm.objectstorage.us-ashburn-1.oci.customer-oci.com/p/VBRD9P8ZFWkKvnfhrWxkpPe8K03-JIoM5h_8EJyJcpE80c108fuUjg7R5L5O7mMZ/n/adwc4pm/b/OML-Resources/o/all_MiniLM_L12_v2_augmented.zip
+
+unzip -oq all_MiniLM_L12_v2_augmented.zip
+
+-- Create a DIRECTORY and Grant User
+sqlplus sys/<password>@//localhost:1539/FREEPDB1 as sysdba
+
+create or replace directory models_dir as '/tmp/models';
+grant read, write on directory models_dir to mehmet;
+
+--LOAD the MODEL Into Database (mehmet)
+begin
+  dbms_vector.drop_onnx_model (
+    model_name => 'ALL_MINILM_L12_V2',
+    force => true);
+
+  dbms_vector.load_onnx_model (
+    directory  => 'models_dir',
+    file_name  => 'all_MiniLM_L12_v2.onnx',
+    model_name => 'ALL_MINILM_L12_V2');
+end;
+/
+
+-- Check the Model if load into Database or not
+column model_name format a30
+column algorithm format a10
+column mining_function format a15
+
+select model_name, algorithm, mining_function
+from   user_mining_models
+where  model_name = 'ALL_MINILM_L12_V2';
+
+-- Test the Model (Generating Vector)
+
+set long 1000000
+set pages 100000
+
+select vector_embedding(all_minilm_l12_v2 using 'Merhaba Dünya' as data) AS vektor;
+
+-- UPDATE Table (MEYVELER) (Generating Vector using ADI column)
+update MEYVELER
+set    VEKTOR2 = vector_embedding(all_minilm_l12_v2 using ADI as data);
+
+commit;
+
+
+SELECT 'EKŞİ' as Prompt, ADI as MEYVE_ADI, 
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'EKŞİ' as data))) as distance
+FROM   MEYVELER
+order by 3 desc
+fetch approximate first 5 rows only;
+/
+
+SELECT 'ELMA' as Prompt, ADI as MEYVE_ADI, 
+       1-vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'ELMA' as data))) as distance
+FROM   MEYVELER
+order by 3 desc
+fetch approximate first 5 rows only;
+
+
+SELECT 'TATLI' as Prompt, ADI as MEYVE_ADI, 
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'TATLI' as data))) as distance
+FROM   MEYVELER
+order by 3 desc
+fetch approximate first 5 rows only;
+
+SELECT 'MAYHOŞ' as Prompt, ADI as MEYVE_ADI, 
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'MAYHOŞ' as data))) as distance
+FROM   MEYVELER
+order by 3
+fetch approximate first 5 rows only;
+
+SELECT 'MAYHOŞ' as Prompt, ADI as MEYVE_ADI, 
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'MAYHOŞ' as data)), COSINE) as distance_COS,
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'MAYHOŞ' as data)), EUCLIDEAN) as distance_OKLIT,
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'MAYHOŞ' as data)), EUCLIDEAN_SQUARED) as distance_OKLIT_SQ,
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'MAYHOŞ' as data)), DOT) as distance_DOT,
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'MAYHOŞ' as data)), HAMMING) as distance_HAMM,
+       vector_distance(VEKTOR2, (vector_embedding(all_minilm_l12_v2 using 'MAYHOŞ' as data)), MANHATTAN) as distance_MANH
+FROM   MEYVELER
+order by 3
+fetch approximate first 5 rows only;
+ 
+
+
+ 
